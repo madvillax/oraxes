@@ -65,6 +65,8 @@ Typer CLI
 
 The LLM provider makes decisions; application code validates arguments, executes tools serially (one browser tab is intentionally stateful), rejects invalid evidence, and owns completion. This keeps action execution auditable and provider-independent.
 
+The default fast path is `search` → `fetch_page` → `collect_evidence`. Chromium is launched lazily only for the fallback path: `browser_open` → `browser_click` → `browser_extract`. This avoids browser startup and JavaScript rendering for ordinary static sources.
+
 ## Development
 
 ```bash
