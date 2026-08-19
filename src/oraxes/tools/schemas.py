@@ -16,7 +16,7 @@ class NavigateArgs(BaseModel):
 
 class FetchPageArgs(BaseModel):
     url: HttpUrl
-    max_chars: int = Field(default=8_000, ge=500, le=20_000)
+    max_chars: int = Field(default=6_000, ge=500, le=20_000)
 
 
 class ClickArgs(BaseModel):
@@ -35,7 +35,7 @@ class ReadPageArgs(BaseModel):
 class ExtractElementsArgs(BaseModel):
     selector: str = Field(default="body", min_length=1, max_length=500)
     limit: int = Field(default=20, ge=1, le=50)
-    max_chars: int = Field(default=8_000, ge=500, le=20_000)
+    max_chars: int = Field(default=6_000, ge=500, le=20_000)
 
 
 class ScrollArgs(BaseModel):
