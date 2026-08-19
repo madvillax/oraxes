@@ -169,7 +169,13 @@ class ToolRegistry:
     async def _search_web(self, args: BaseModel) -> dict[str, object]:
         parsed = SearchArgs.model_validate(args)
         results = await self._search.run(parsed.query, parsed.max_results)
-        return {"results": [result.model_dump(mode="json") for result in results]}
+        return {
+            "results": [result.model_dump(mode="json") for result in results],
+            "next_action": (
+                "Call fetch_page with the most credible result URL. Do not call search again "
+                "until at least one result has been fetched and evaluated."
+            ),
+        }
 
     async def _fetch_page(self, args: BaseModel) -> dict[str, object]:
         parsed = FetchPageArgs.model_validate(args)
