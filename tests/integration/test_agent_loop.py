@@ -112,3 +112,4 @@ async def test_agent_collects_verbatim_evidence_and_returns_citations() -> None:
     assert result.citations[0].id == "S1"
     assert result.citations[0].quote == "The primary source says the program started in 2024."
     assert result.findings[0].evidence_ids == ["S1"]
+    assert result.limitations == []
