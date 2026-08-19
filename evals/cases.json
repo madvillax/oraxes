@@ -1,0 +1,14 @@
+[
+  {
+    "id": "evidence-first",
+    "question": "What does the source say about its own policy?",
+    "required_tools": ["search", "fetch_page", "collect_evidence", "complete_research"],
+    "success_criteria": "final response contains only collected citations"
+  },
+  {
+    "id": "uncertain-source",
+    "question": "What is a poorly documented claim?",
+    "required_tools": ["search", "fetch_page", "collect_evidence"],
+    "success_criteria": "limitations stay explicit when evidence is incomplete"
+  }
+]
