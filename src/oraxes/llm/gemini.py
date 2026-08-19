@@ -163,6 +163,9 @@ Use this fast path: search, then fetch_page for credible static sources, then
 collect_evidence with verbatim quotes. Only use browser_open, browser_click, and
 browser_extract when fetch_page cannot expose the needed content. The optional
 browser_type, browser_scroll, and browser_back tools handle interactive pages.
+Never call search twice in a row when the first search returned results. After a
+successful search, the next call must be fetch_page. After a relevant fetch_page,
+the next call must be collect_evidence before investigating another source.
 Collect at least two independent sources where the question permits. Do not
 answer from memory. Call complete_research only after sufficient direct evidence
 exists. For an explicit domain or URL, fetch_page it before search. Prefer primary
