@@ -2,7 +2,7 @@
 
 Oraxes is a terminal-operated web research agent. Give it a question and it uses Gemini to plan a bounded sequence of web-search and Playwright browser actions, collects verbatim evidence, and prints a structured report with source citations.
 
-## What V1 includes
+## V1
 
 - Async-first custom agent loop—no LangChain, LangGraph, Browser Use, or multi-agent framework.
 - Gemini behind a small `LLMProvider` interface, making another provider straightforward to add.
