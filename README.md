@@ -4,7 +4,7 @@ Oraxes is a terminal-operated web research agent. Give it a question and it uses
 
 ## V1
 
-- Async-first custom agent loop—no LangChain, LangGraph, Browser Use, or multi-agent framework.
+- Async-first LangGraph workflow with explicit planning, tool execution, routing, and synthesis nodes.
 - Gemini behind a small `LLMProvider` interface, making another provider straightforward to add.
 - Structured Gemini function calls and a Pydantic-constrained structured final result.
 - Fast tools: `search` and `fetch_page` retrieve static evidence without starting Chromium.
@@ -55,7 +55,10 @@ The terminal output contains the answer, supported findings, evidence IDs, direc
 
 ```text
 Typer CLI
-   -> ResearchAgent (bounded asyncio loop)
+   -> ResearchAgent (per-run dependency boundary)
+       -> LangGraph StateGraph
+           -> plan -> tools -> plan
+           -> plan/tools -> synthesize -> END
        -> LLMProvider -> GeminiProvider (function calls + JSON final output)
        -> ToolRegistry (Pydantic argument validation)
            -> SearchTool + PageFetcher (fast static path)
@@ -63,7 +66,7 @@ Typer CLI
            -> Evidence and citation state (memory only)
 ```
 
-The LLM provider makes decisions; application code validates arguments, executes tools serially (one browser tab is intentionally stateful), rejects invalid evidence, and owns completion. This keeps action execution auditable and provider-independent.
+LangGraph owns workflow transitions and the configured planning-step bound. The LLM provider makes decisions; application code validates arguments, executes tools serially (one browser tab is intentionally stateful), rejects invalid evidence, and owns citations. This keeps action execution auditable and provider-independent.
 
 The default fast path is `search` → `fetch_page` → `collect_evidence`. Chromium is launched lazily only for the fallback path: `browser_open` → `browser_click` → `browser_extract`. This avoids browser startup and JavaScript rendering for ordinary static sources.
 
@@ -79,7 +82,7 @@ uv run pytest
 Test layers:
 
 - `tests/unit`: Pydantic validation and search-result parsing.
-- `tests/integration`: scripted provider + deterministic browser, exercising the full loop and evidence gate.
+- `tests/integration`: scripted provider + deterministic browser, exercising the full graph and evidence gate.
 - `tests/e2e`: real async Playwright against a local HTTP server; no external website dependency.
 - `evals/cases.json`: lightweight behavioral cases that protect the evidence-first contract.
 
@@ -88,7 +91,7 @@ Test layers:
 ```text
 src/oraxes/
   cli.py                 terminal entry point and Rich rendering
-  agent/                 state and custom research loop
+  agent/                 in-memory state, LangGraph workflow, and public facade
   llm/                   provider protocol and Gemini adapter
   browser/               async Playwright session
   tools/                 search, schemas, and validated dispatcher
