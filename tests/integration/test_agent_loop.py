@@ -86,7 +86,7 @@ class ScriptedProvider:
 
 
 @pytest.mark.integration
-async def test_agent_collects_verbatim_evidence_and_returns_citations() -> None:
+async def test_langgraph_collects_verbatim_evidence_and_returns_citations() -> None:
     async def html(_: str) -> str:
         return "<article class='result'><a class='result__a' href='https://example.test/source'>Source</a></article>"
 
@@ -113,3 +113,42 @@ async def test_agent_collects_verbatim_evidence_and_returns_citations() -> None:
     assert result.citations[0].quote == "The primary source says the program started in 2024."
     assert result.findings[0].evidence_ids == ["S1"]
     assert result.limitations == []
+
+
+class RepeatingSearchProvider:
+    def __init__(self) -> None:
+        self.decisions = 0
+
+    async def decide(self, _: str, __: AgentState, ___: list[ToolDefinition]) -> ScriptedTurn:
+        self.decisions += 1
+        return ScriptedTurn(
+            [
+                ToolCall(
+                    id=str(self.decisions),
+                    name="search",
+                    arguments={"query": "program"},
+                )
+            ]
+        )
+
+    async def synthesize(self, question: str, _: AgentState) -> ResearchResult:
+        return ResearchResult(question=question, answer="No supported finding was collected.")
+
+
+@pytest.mark.integration
+async def test_langgraph_routes_to_synthesis_at_planning_step_limit() -> None:
+    async def html(_: str) -> str:
+        return "<html><body>No results</body></html>"
+
+    provider = RepeatingSearchProvider()
+    agent = ResearchAgent(
+        provider,
+        max_steps=2,
+        browser_factory=FakeBrowser,
+        search=SearchTool(client=html),
+    )
+
+    result = await agent.run("What happened?")
+
+    assert provider.decisions == 2
+    assert result.limitations == ["Stopped after the configured 2 tool-planning steps."]
