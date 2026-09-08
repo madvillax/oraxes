@@ -18,7 +18,7 @@ class ProviderTurn(Protocol):
 
 
 class LLMProvider(Protocol):
-    """The minimal contract required by the custom research agent loop."""
+    """The provider-neutral contract used by the LangGraph research workflow."""
 
     async def decide(
         self, question: str, state: AgentState, tools: list[ToolDefinition]
