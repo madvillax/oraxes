@@ -107,7 +107,7 @@ class AgentEventKind(StrEnum):
 
 
 class AgentEvent(BaseModel):
-    """An inspectable in-memory trace entry for one agent-loop event."""
+    """An inspectable in-memory trace entry for one graph event."""
 
     kind: AgentEventKind
     detail: str
