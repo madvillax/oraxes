@@ -8,6 +8,7 @@ dependencies = [
   "beautifulsoup4>=4.12.3",
   "google-genai>=1.0.0",
   "httpx>=0.28.1",
+  "langgraph>=1.2.0,<2.0",
   "playwright>=1.52.0",
   "pydantic>=2.10.0",
   "python-dotenv>=1.0.1",
