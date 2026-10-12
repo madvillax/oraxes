@@ -1,10 +1,10 @@
-"""Public research-agent facade backed by a LangGraph workflow."""
+"""Public research-agent facade backed by an application-owned async loop."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 
-from oraxes.agent.graph import ResearchGraph
+from oraxes.agent.loop import ResearchLoop
 from oraxes.browser.session import BrowserSession
 from oraxes.llm.provider import LLMProvider
 from oraxes.research.models import ResearchResult
@@ -14,7 +14,7 @@ from oraxes.tools.search import SearchTool
 
 
 class ResearchAgent:
-    """Create per-run dependencies and execute the LangGraph research workflow."""
+    """Create per-run dependencies and execute the bounded research loop."""
 
     def __init__(
         self,
@@ -34,9 +34,9 @@ class ResearchAgent:
     async def run(self, question: str) -> ResearchResult:
         async with self._browser_factory() as browser:
             registry = ToolRegistry(browser, self._search, self._fetcher)
-            graph = ResearchGraph(
+            loop = ResearchLoop(
                 self._provider,
                 registry,
                 max_steps=self._max_steps,
             )
-            return await graph.run(question)
+            return await loop.run(question)

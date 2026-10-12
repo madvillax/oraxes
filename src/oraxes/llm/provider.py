@@ -18,7 +18,7 @@ class ProviderTurn(Protocol):
 
 
 class LLMProvider(Protocol):
-    """The provider-neutral contract used by the LangGraph research workflow."""
+    """The provider-neutral contract used by the custom research loop."""
 
     async def decide(
         self, question: str, state: AgentState, tools: list[ToolDefinition]

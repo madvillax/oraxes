@@ -4,7 +4,7 @@ Oraxes is a terminal-operated web research agent. Give it a question and it uses
 
 ## V1
 
-- Async-first LangGraph workflow with explicit planning, tool execution, routing, and synthesis nodes.
+- Custom async agent loop with bounded planning, ordered tool execution, and final synthesis.
 - Gemini behind a small `LLMProvider` interface, making another provider straightforward to add.
 - Structured Gemini function calls and a Pydantic-constrained structured final result.
 - Fast tools: `search` and `fetch_page` retrieve static evidence without starting Chromium.
@@ -56,9 +56,9 @@ The terminal output contains the answer, supported findings, evidence IDs, direc
 ```text
 Typer CLI
    -> ResearchAgent (per-run dependency boundary)
-       -> LangGraph StateGraph
-           -> plan -> tools -> plan
-           -> plan/tools -> synthesize -> END
+       -> ResearchLoop (application-owned async control flow)
+           -> decide -> execute tool batch -> repeat up to max_steps
+           -> no tools / completion / step limit -> synthesize
        -> LLMProvider -> GeminiProvider (function calls + JSON final output)
        -> ToolRegistry (Pydantic argument validation)
            -> SearchTool + PageFetcher (fast static path)
@@ -66,7 +66,7 @@ Typer CLI
            -> Evidence and citation state (memory only)
 ```
 
-LangGraph owns workflow transitions and the configured planning-step bound. The LLM provider makes decisions; application code validates arguments, executes tools serially (one browser tab is intentionally stateful), rejects invalid evidence, and owns citations. This keeps action execution auditable and provider-independent.
+`ResearchLoop` owns the control flow directly in Python, with fresh in-memory state for each run. Each turn asks the provider for a decision and executes its tool calls serially (one browser tab is intentionally stateful). The loop stops when the provider returns no tools, a completed tool batch requests completion, or `max_steps` planning turns have run. It then synthesizes once, attaches only collected citations, and removes unsupported findings. Reaching the step limit without explicit completion adds a limitation to the report. Application code validates arguments and evidence; the LLM provider makes decisions. No orchestration framework is required.
 
 The default fast path is `search` → `fetch_page` → `collect_evidence`. Chromium is launched lazily only for the fallback path: `browser_open` → `browser_click` → `browser_extract`. This avoids browser startup and JavaScript rendering for ordinary static sources.
 
@@ -82,7 +82,7 @@ uv run pytest
 Test layers:
 
 - `tests/unit`: Pydantic validation and search-result parsing.
-- `tests/integration`: scripted provider + deterministic browser, exercising the full graph and evidence gate.
+- `tests/integration`: scripted provider + deterministic browser, exercising the research loop and evidence gate.
 - `tests/e2e`: real async Playwright against a local HTTP server; no external website dependency.
 - `evals/cases.json`: lightweight behavioral cases that protect the evidence-first contract.
 
@@ -91,7 +91,7 @@ Test layers:
 ```text
 src/oraxes/
   cli.py                 terminal entry point and Rich rendering
-  agent/                 in-memory state, LangGraph workflow, and public facade
+  agent/                 in-memory state, custom async loop, and public facade
   llm/                   provider protocol and Gemini adapter
   browser/               async Playwright session
   tools/                 search, schemas, and validated dispatcher
